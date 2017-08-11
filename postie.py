@@ -73,7 +73,7 @@ class Postie:
 
                 while token_queue and token_queue[0] not in WHITESPACE:
                     token = token_queue.popleft()
-                    if self.__is_numeral(token):
+                    if self.__is_numeral(token) or token == '.':
                         number_literal += token
                     elif self.__is_alpha(token):
                         raise ValueError('Identifiers must not begin with numbers')
@@ -121,7 +121,10 @@ class Postie:
                     raise ValueError(f'Unknown identifier "{symbol}"')
 
             if self.__is_number(symbol):
-                return int(symbol)
+                if self.__is_int(symbol):
+                    return int(symbol)
+                else:
+                    return float(symbol)
 
         return symbol
 
@@ -142,6 +145,12 @@ class Postie:
         )
 
     def __is_number(self, symbol):
+        return all(
+            self.__is_numeral(token) or token == '.'
+            for token in symbol
+        )
+
+    def __is_int(self, symbol):
         return all(self.__is_numeral(token) for token in symbol)
 
 
