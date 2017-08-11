@@ -2,6 +2,8 @@ from collections import deque
 import math
 import sys
 
+from utils.symbol_type import *
+
 WHITESPACE = (' ', '\n')
 OPERATORS = ('+', '-', '*', '/')
 GLOBALS = dict()
@@ -52,7 +54,7 @@ class Postie:
                 first = calc_stack.pop()
                 second = calc_stack.pop()
 
-                if self.__is_identifier(second):
+                if is_identifier(second):
                     self.__identifiers[second] = first
                     return f'{second} = {first}'
                 else:
@@ -68,26 +70,26 @@ class Postie:
 
                 calc_stack.append(value)
 
-            elif self.__is_numeral(token):
+            elif is_numeral(token):
                 number_literal = token
 
                 while token_queue and token_queue[0] not in WHITESPACE:
                     token = token_queue.popleft()
-                    if self.__is_numeral(token) or token == '.':
+                    if is_numeral(token) or token == '.':
                         number_literal += token
-                    elif self.__is_alpha(token):
+                    elif is_alpha(token):
                         raise ValueError('Identifiers must not begin with numbers')
                     else:
                         raise ValueError(f'Bad symbol "{token}" in numeric literal')
 
                 calc_stack.append(number_literal)
 
-            elif self.__is_alpha(token):
+            elif is_alpha(token):
                 identifier = token
 
                 while token_queue and token_queue[0] not in WHITESPACE:
                     token = token_queue.popleft()
-                    if self.__is_alphanumeric(token):
+                    if is_alphanumeric(token):
                         identifier += token
                     else:
                         raise ValueError(f'Bad symbol "{token}" in identifier')
@@ -114,44 +116,19 @@ class Postie:
 
     def __get_value(self, symbol):
         if type(symbol) == str:
-            if self.__is_identifier(symbol):
+            if is_identifier(symbol):
                 if symbol in self.__identifiers:
                     return self.__get_value(self.__identifiers[symbol])
                 else:
                     raise ValueError(f'Unknown identifier "{symbol}"')
 
-            if self.__is_number(symbol):
-                if self.__is_int(symbol):
+            if is_number(symbol):
+                if is_int(symbol):
                     return int(symbol)
                 else:
                     return float(symbol)
 
         return symbol
-
-    def __is_alpha(self, token):
-        return token in 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
-
-    def __is_numeral(self, token):
-        return token in '1234567890'
-
-    def __is_alphanumeric(self, token):
-        return self.__is_numeral(token) or self.__is_alpha(token)
-
-    def __is_identifier(self, symbol):
-        return (
-            type(symbol) == str and
-            self.__is_alpha(symbol[0]) and
-            all(self.__is_alphanumeric(token) for token in symbol)
-        )
-
-    def __is_number(self, symbol):
-        return all(
-            self.__is_numeral(token) or token == '.'
-            for token in symbol
-        )
-
-    def __is_int(self, symbol):
-        return all(self.__is_numeral(token) for token in symbol)
 
 
 if __name__ == '__main__':
