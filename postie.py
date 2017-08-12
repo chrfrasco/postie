@@ -1,4 +1,4 @@
-from collections import deque
+from collections import deque, namedtuple
 import math
 import sys
 
@@ -36,23 +36,23 @@ class Postie:
 
     def run_line(self, line):
         """Process a line."""
-        calc_stack = deque()
-        token_queue = deque(line)
+        token_stack = deque()
+        char_queue = deque(line)
 
-        while token_queue:
-            token = token_queue.popleft()
+        while char_queue:
+            next_char = char_queue.popleft()
 
-            if token in WHITESPACE:
+            if next_char in WHITESPACE:
                 continue
 
-            elif token == '=':
-                if len(calc_stack) < 2:
-                    raise ValueError(f'Not enough arguments for "{token}"')
-                if len(calc_stack) > 2:
+            elif next_char == '=':
+                if len(token_stack) < 2:
+                    raise ValueError(f'Not enough arguments for "{next_char}"')
+                if len(token_stack) > 2:
                     raise ValueError(f'Assigment must be the last operation')
 
-                first = calc_stack.pop()
-                second = calc_stack.pop()
+                first = token_stack.pop()
+                second = token_stack.pop()
 
                 if is_identifier(second):
                     self.__identifiers[second] = first
@@ -60,46 +60,46 @@ class Postie:
                 else:
                     raise ValueError(f'Cannot assign {second} to {first}')
 
-            elif token in OPERATORS:
-                if len(calc_stack) < 2:
-                    raise ValueError(f'Not enough arguments for "{token}"')
+            elif next_char in OPERATORS:
+                if len(token_stack) < 2:
+                    raise ValueError(f'Not enough arguments for "{next_char}"')
 
-                first = self.__get_value(calc_stack.pop())
-                second = self.__get_value(calc_stack.pop())
-                value = self.__apply(first, second, token)
+                first = self.__get_value(token_stack.pop())
+                second = self.__get_value(token_stack.pop())
+                value = self.__apply(first, second, next_char)
 
-                calc_stack.append(value)
+                token_stack.append(value)
 
-            elif is_numeral(token):
-                number_literal = token
+            elif is_numeral(next_char):
+                number_literal = next_char
 
-                while token_queue and token_queue[0] not in WHITESPACE:
-                    token = token_queue.popleft()
-                    if is_numeral(token) or token == '.':
-                        number_literal += token
-                    elif is_alpha(token):
+                while char_queue and char_queue[0] not in WHITESPACE:
+                    next_char = char_queue.popleft()
+                    if is_numeral(next_char) or next_char == '.':
+                        number_literal += next_char
+                    elif is_alpha(next_char):
                         raise ValueError('Identifiers must not begin with numbers')
                     else:
-                        raise ValueError(f'Bad symbol "{token}" in numeric literal')
+                        raise ValueError(f'Bad symbol "{next_char}" in numeric literal')
 
-                calc_stack.append(number_literal)
+                token_stack.append(number_literal)
 
-            elif is_alpha(token):
-                identifier = token
+            elif is_alpha(next_char):
+                identifier = next_char
 
-                while token_queue and token_queue[0] not in WHITESPACE:
-                    token = token_queue.popleft()
-                    if is_alphanumeric(token):
-                        identifier += token
+                while char_queue and char_queue[0] not in WHITESPACE:
+                    next_char = char_queue.popleft()
+                    if is_alphanumeric(next_char):
+                        identifier += next_char
                     else:
-                        raise ValueError(f'Bad symbol "{token}" in identifier')
+                        raise ValueError(f'Bad symbol "{next_char}" in identifier')
 
-                calc_stack.append(identifier)
+                token_stack.append(identifier)
 
-        if len(calc_stack) == 1:
-            return self.__get_value(calc_stack.pop())
+        if len(token_stack) == 1:
+            return self.__get_value(token_stack.pop())
         else:
-            print(calc_stack)
+            print(token_stack)
             raise ValueError(f'Too many arguments')
 
     def __apply(self, first, second, operator):
